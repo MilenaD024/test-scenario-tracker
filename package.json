@@ -2,7 +2,7 @@
   "name": "test-scenario-tracker",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://<korisnicko-ime>.github.io/test-scenario-tracker",
+  "homepage": "https://MilenaD024.github.io/test-scenario-tracker",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
