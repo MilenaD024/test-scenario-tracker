@@ -1,12 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Test Scenario Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    .scenario { background: #fff; padding: 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .scenario h2 { margin: 0 0 10px; }
+    .step { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
+    input[type="text"] { flex: 1; padding: 6px; }
+    select, button { margin-top: 10px; }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
+  <h1>Test Scenario Tracker</h1>
+  <label for="statusFilter">Filter po statusu: </label>
+  <select id="statusFilter" onchange="renderScenarios()">
+    <option value="All">Svi</option>
+    <option value="Not Started">Nije početo</option>
+    <option value="In Progress">U toku</option>
+    <option value="Passed">Prošli</option>
+    <option value="Failed">Neuspeli</option>
+  </select>
+  <div id="scenarios"></div>
+
+  <script>
+    const defaultScenarios = [
+      "Kreiranje dinarskog računa maloprodaje",
+      "Kreiranje dinarskog avansnog računa maloprodaje",
+      "Kreiranje dinarskog predračuna",
+      "Kreiranje deviznog računa maloprodaje",
+      "Kreiranje deviznog predračuna maloprodaje",
+      "Kreiranje dinarskog predračuna veleprodaje",
+      "Kreiranje deviznog predračuna veleprodaje",
+      "Kreiranje dinarskog avansa veleprodaje",
+      "Kreiranje deviznog računa veleprodaje",
+      "Kreiranje dinarskog konačnog računa veleprodaje",
+      "Kreiranje običnog dinarskog računa",
+      "Kreiranje partnera (domaćeg, stranog, pravnog, fizičkog lica)",
+      "Kreiranje računa SNPDV - sa oslobođenjem",
+      "Provera načina plaćanja (kartično, virmanski, paypal)",
+      "Provera fiskalizacije na SUF-u",
+      "Provera efaktura na SEF-u",
+      "Provera knjiženja (upis u popdv, izveštaji za SNPDV...)"
+    ];
+
+    let scenarios = JSON.parse(localStorage.getItem('testScenarios')) || defaultScenarios.map(name => ({ name, steps: [], status: "Not Started" }));
+
+    function save() {
+      localStorage.setItem('testScenarios', JSON.stringify(scenarios));
+    }
+
+    function addStep(i) {
+      scenarios[i].steps.push({ label: '', checked: false });
+      save();
+      renderScenarios();
+    }
+
+    function updateStep(i, j, value) {
+      scenarios[i].steps[j].label = value;
+      save();
+    }
+
+    function toggleChecked(i, j) {
+      scenarios[i].steps[j].checked = !scenarios[i].steps[j].checked;
+      save();
+      renderScenarios();
+    }
+
+    function updateStatus(i, value) {
+      scenarios[i].status = value;
+      save();
+      renderScenarios();
+    }
+
+    function renderScenarios() {
+      const filter = document.getElementById('statusFilter').value;
+      const container = document.getElementById('scenarios');
+      container.innerHTML = '';
+
+      scenarios.forEach((s, i) => {
+        if (filter !== 'All' && s.status !== filter) return;
+
+        const div = document.createElement('div');
+        div.className = 'scenario';
+
+        const header = document.createElement('div');
+        header.innerHTML = `<h2>${s.name}</h2>`;
+        const select = document.createElement('select');
+        ['Not Started','In Progress','Passed','Failed'].forEach(status => {
+          const opt = document.createElement('option');
+          opt.value = status;
+          opt.textContent = status;
+          if (s.status === status) opt.selected = true;
+          select.appendChild(opt);
+        });
+        select.onchange = e => updateStatus(i, e.target.value);
+        header.appendChild(select);
+        div.appendChild(header);
+
+        s.steps.forEach((step, j) => {
+          const stepDiv = document.createElement('div');
+          stepDiv.className = 'step';
+          const check = document.createElement('input');
+          check.type = 'checkbox';
+          check.checked = step.checked;
+          check.onchange = () => toggleChecked(i, j);
+          const text = document.createElement('input');
+          text.type = 'text';
+          text.value = step.label;
+          text.oninput = e => updateStep(i, j, e.target.value);
+          stepDiv.appendChild(check);
+          stepDiv.appendChild(text);
+          div.appendChild(stepDiv);
+        });
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Dodaj stavku';
+        btn.onclick = () => addStep(i);
+        div.appendChild(btn);
+
+        container.appendChild(div);
+      });
+    }
+
+    renderScenarios();
+  </script>
 </body>
 </html>
